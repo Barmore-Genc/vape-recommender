@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>Vape & Tincture Recommender</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      box-sizing: border-box;
+      min-height: 100vh;
+    }
+    .theme-light {
+      background: #f7f7f7;
+      color: #222;
+    }
+    .theme-dark {
+      background: #222;
+      color: #eee;
+    }
+    h1 { margin-bottom: 10px; font-size: 2em; }
+    .effects, .mode {
+      margin-bottom: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .effects label, .mode label {
+      font-size: 1.1em;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #fff;
+      color: #222;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      margin-bottom: 4px;
+      flex: 1 1 120px;
+      min-width: 120px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .effects input[type="checkbox"], .mode input[type="radio"] {
+      width: 1.2em;
+      height: 1.2em;
+      accent-color: #0047AB;
+    }
+    .table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+      overflow-x: auto;
+      display: block;
+      font-size: 1em;
+    }
+    .theme-dark .effects label, .theme-dark .mode label {
+      background: #333 !important;
+      color: #fff !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+      border: none;
+    }
+    .table th, .table td {
+      border: 1px solid #ccc;
+      padding: 10px 8px;
+      text-align: left;
+      min-width: 90px;
+    }
+    .theme-dark .table, .theme-dark .table th, .theme-dark .table td {
+      background: #333;
+      color: #eee;
+      border-color: #444;
+    }
+  .type-hybrid { background: purple; color: white; }
+  .type-indica { background: blue; color: white; }
+  .type-sativa { background: red; color: white; }
+  .type-cbd { background: #FF7518; color: white; }
+  .type-unknown { background: #888; color: white; }
+  .hyperlink { color: white; text-decoration: underline; cursor: pointer; background: inherit; }
+  .theme-light .hyperlink { color: white; }
+  .theme-dark .hyperlink { color: #eee; }
+    .pick-btn {
+      margin: 10px 0;
+      padding: 12px 0;
+      font-size: 1.1em;
+      width: 100%;
+      max-width: 350px;
+      border-radius: 8px;
+      border: none;
+      background: #0047AB;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      transition: background 0.2s;
+      display: block;
+    }
+    .pick-btn:active, .pick-btn:focus {
+      background: #A0C7FF;
+      color: #0047AB;
+      outline: none;
+    }
+    .message {
+      margin-top: 20px;
+      color: #b00;
+      font-size: 1.1em;
+    }
+    #results {
+      width: 100%;
+      overflow-x: auto;
+    }
+    #legend {
+      margin-top: 40px;
+      font-size: 1em;
+      width: 100%;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.3em; }
+      .effects label, .mode label {
+        font-size: 1em;
+        min-width: 90px;
+        padding: 5px 6px;
+      }
+      .pick-btn {
+        font-size: 1em;
+        padding: 10px 0;
+        max-width: 100%;
+      }
+      .table th, .table td {
+        font-size: 0.95em;
+        padding: 8px 4px;
+      }
+      body, .theme-light, .theme-dark { padding: 6px; }
+    }
+    #modeToggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+    }
+    #modeIcon {
+      width: 32px;
+      height: 32px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vape & Tincture Recommender</h1>
+  <div class="effects">
+    <label><input type="checkbox" value="Sleep"> Sleep</label>
+    <label><input type="checkbox" value="Relaxation"> Relaxation</label>
+    <label><input type="checkbox" value="Pain Relief"> Pain Relief</label>
+    <label><input type="checkbox" value="Balanced"> Balanced</label>
+    <label><input type="checkbox" value="Energy"> Energy</label>
+    <label><input type="checkbox" value="Focus"> Focus</label>
+  </div>
+  <div class="mode">
+    <label><input type="radio" name="mode" value="AND"> AND</label>
+    <label><input type="radio" name="mode" value="OR" checked> OR</label>
+  </div>
+  <button class="pick-btn" onclick="showRecommendation()">Get Recommendation</button>
+  <button class="pick-btn" onclick="pickForMe()">Pick For Me</button>
+  <button id="modeToggle">
+    <img id="modeIcon" src="moon.png" alt="Toggle Mode">
+  </button>
+  <div id="results"></div>
+
+  <div id="legend" style="margin-top:40px; display:none;">
+    <h3>Legend</h3>
+    <table style="border-collapse:collapse;">
+      <tr>
+        <td class="type-hybrid" style="padding:6px 16px;">Hybrid</td>
+      </tr>
+      <tr>
+        <td class="type-indica" style="padding:6px 16px;">Indica</td>
+      </tr>
+      <tr>
+        <td class="type-sativa" style="padding:6px 16px;">Sativa</td>
+      </tr>
+      <tr>
+        <td class="type-cbd" style="padding:6px 16px;">CBD</td>
+      </tr>
+      <tr>
+        <td class="type-unknown" style="padding:6px 16px;">Unknown</td>
+      </tr>
+    </table>
+  </div>
+  <script>
+    let currentMode = 'light';
+    const modeToggle = document.getElementById('modeToggle');
+    const modeIcon = document.getElementById('modeIcon');
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.body.classList.remove('theme-dark', 'theme-light');
+      document.body.classList.add(mode === 'dark' ? 'theme-dark' : 'theme-light');
+      if (mode === 'dark') {
+        modeIcon.src = 'sun.png';
+        modeIcon.alt = 'Light Mode';
+      } else {
+        modeIcon.src = 'moon.png';
+        modeIcon.alt = 'Dark Mode';
+      }
+      // Save mode to localStorage
+      try {
+        localStorage.setItem('themeMode', mode);
+      } catch (e) {}
+    }
+
+    // Load mode from localStorage on page load
+    let savedMode = 'light';
+    try {
+      const stored = localStorage.getItem('themeMode');
+      if (stored === 'dark' || stored === 'light') savedMode = stored;
+    } catch (e) {}
+    setMode(savedMode);
+
+    modeToggle.onclick = function() {
+      setMode(currentMode === 'light' ? 'dark' : 'light');
+    };
+    const products = [
+      {name: "Blueberry", effect: ["sleep", "pain relief"], type: "Hybrid", brand: "Crystal Clear", link: "https://www.iheartjane.com/products/23724/crystal-clear-blueberry"},
+      {name: "1:1 Buddha’s Smile", effect: ["relaxation", "pain relief"], type: "Hybrid/CBD:THC", brand: "Airo Brands", link: "https://www.iheartjane.com/products/22153/airo-brands-buddha-s-smile-1-1-cbd-thc"},
+      {name: "Restore 1:1 Tincture", effect: ["relaxation", "pain relief"], type: "Tincture/CBD:THC", brand: "Doctor Solomon's", link: "https://www.iheartjane.com/products/626660/dr-solomon-s-1-1-restore-15ml-200mg-cbd-200mg-thc"},
+      {name: "Green Crack", effect: ["energy", "focus"], type: "Sativa", brand: "Ozone", link: "https://www.iheartjane.com/products/1181259/ozone-green-crack"},
+      {name: "Durban Poison", effect: ["energy", "pain relief", "focus"], type: "Sativa", brand: "Ozone", link: "https://letsascend.com/stores/northlake-illinois/product/durban-poison-cartridge"},
+      {name: "Jack Herer", effect: ["energy", "pain relief", "focus"], type: "Sativa", brand: "Joos", link: "https://www.iheartjane.com/products/193760/joos-jack-herer"},
+      {name: "Pineapple Express", effect: ["energy"], type: "Sativa", brand: "&Shine", link: "https://www.iheartjane.com/products/775328/shine-pineapple-express"},
+      {name: "Sour Diesel Essence", effect: ["energy", "pain relief"], type: "Sativa", brand: "Ozone", link: "https://www.iheartjane.com/products/2043460/the-essence-sour-diesel"},
+      {name: "XJ-13", effect: ["energy"], type: "Sativa", brand: "&Shine", link: "https://www.iheartjane.com/products/568829/shine-xj-13"},
+      {name: "Super Lemon Haze", effect: ["energy", "pain relief"], type: "Hybrid/Sativa", brand: "Bloom", link: "https://www.iheartjane.com/products/3273/bloom-super-lemon-haze"},
+      {name: "Ghost Train Haze", effect: ["energy", "pain relief"], type: "Sativa", brand: "Shine", link: "https://www.iheartjane.com/products/767935/shine-ghost-train-haze"},
+      {name: "Bermuda Triangle", effect: ["energy"], type: "Sativa", brand: "Airo Brands", link: "https://risecannabis.com/dispensaries/illinois/naperville/255/medical-menu/product/2363725/airo-brands-sativa-bermuda-triangle-tangerine-banana-passionfruit/"},
+      {name: "Blue Dream", effect: ["balanced", "pain relief"], type: "Hybrid", brand: "&Shine", link: "https://www.iheartjane.com/products/1043599/shine-blue-dream"},
+      {name: "Apple Fritter", effect: ["balanced"], type: "Hybrid", brand: "&Shine", link: "https://www.iheartjane.com/products/1951051/shine-apple-fritter"},
+    ];
+    function getTypeClass(type) {
+  if (type.includes("CBD")) return "type-cbd";
+  if (type.includes("Hybrid")) return "type-hybrid";
+  if (type.includes("Indica")) return "type-indica";
+  if (type.includes("Sativa")) return "type-sativa";
+  return "type-unknown";
+}
+    function showRecommendation() {
+      const selectedEffects = Array.from(document.querySelectorAll('.effects input:checked')).map(e => e.value);
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const resultsDiv = document.getElementById('results');
+    const legendDiv = document.getElementById('legend');
+    resultsDiv.innerHTML = "";
+    legendDiv.style.display = "none";
+      if (selectedEffects.length === 0) {
+        resultsDiv.innerHTML = '<div class="message">Select at least one effect.</div>';
+        return;
+      }
+      let filtered = products.filter(prod => {
+        if (mode === "AND") {
+          return selectedEffects.every(effect => prod.effect.map(e => e.toLowerCase()).includes(effect.toLowerCase()));
+        } else {
+          return selectedEffects.some(effect => prod.effect.map(e => e.toLowerCase()).includes(effect.toLowerCase()));
+        }
+      });
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = `<div class="message">No product found for your selection.</div>`;
+        return;
+      }
+      let table = `<table class="table"><tr><th>Type</th><th>Name</th><th>Brand</th></tr>`;
+          document.querySelectorAll('.type-cbd').forEach(e => {
+            e.style.background = '#FF7518';
+            e.style.color = 'white';
+          });
+          document.querySelectorAll('.hyperlink').forEach(e => {
+            if (!e.parentElement.className.match(/type-(hybrid|indica|sativa|cbd)/)) {
+              e.style.color = '#eee';
+            }
+          });
+      filtered.forEach(prod => {
+        let typeClass = getTypeClass(prod.type);
+        let matched = "";
+        if (mode === "OR") {
+          let matchedEffects = selectedEffects.filter(effect => prod.effect.map(e => e.toLowerCase()).includes(effect.toLowerCase()));
+          if (matchedEffects.length) matched = ` (${matchedEffects.join(", ")})`;
+        }
+        table += `<tr><td class="${typeClass}">${prod.type.split(" ")[0]}</td><td class="${typeClass}"><a class="hyperlink" href="${prod.link}" target="_blank">${prod.name}${matched}</a></td><td>${prod.brand}</td></tr>`;
+      });
+      table += `</table>`;
+      resultsDiv.innerHTML = table;
+    }
+    function pickForMe() {
+      const legendDiv = document.getElementById('legend');
+      legendDiv.style.display = "none";
+      const selectedEffects = Array.from(document.querySelectorAll('.effects input:checked')).map(e => e.value);
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const resultsDiv = document.getElementById('results');
+      let filtered = products.filter(prod => {
+        if (mode === "AND") {
+          return selectedEffects.every(effect => prod.effect.map(e => e.toLowerCase()).includes(effect.toLowerCase()));
+        } else {
+          return selectedEffects.some(effect => prod.effect.map(e => e.toLowerCase()).includes(effect.toLowerCase()));
+          document.querySelectorAll('.type-cbd').forEach(e => {
+            e.style.background = '#FF7518';
+            e.style.color = 'white';
+          });
+          document.querySelectorAll('.hyperlink').forEach(e => {
+            if (!e.parentElement.className.match(/type-(hybrid|indica|sativa|cbd)/)) {
+              e.style.color = '#222';
+            }
+          });
+        }
+      });
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = `<div class="message">No product found for your selection.</div>`;
+        return;
+      }
+      let prod = filtered[Math.floor(Math.random() * filtered.length)];
+      let typeClass = getTypeClass(prod.type);
+      let matched = "";
+      if (mode === "OR") {
+        let matchedEffects = selectedEffects.filter(effect => prod.effect.map(e => e.toLowerCase()).includes(effect.toLowerCase()));
+        if (matchedEffects.length) matched = ` (${matchedEffects.join(", ")})`;
+      }
+      let table = `<table class="table"><tr><th>Type</th><th>Name</th><th>Brand</th></tr>`;
+      table += `<tr><td class="${typeClass}">${prod.type.split(" ")[0]}</td><td class="${typeClass}"><a class="hyperlink" href="${prod.link}" target="_blank">${prod.name}${matched}</a></td><td>${prod.brand}</td></tr>`;
+      table += `</table>`;
+      resultsDiv.innerHTML = table;
+      legendDiv.style.display = "block";
+      legendDiv.style.visibility = "visible";
+      legendDiv.style.opacity = "1";
+    }
+  </script>
+</body>
+</html>
