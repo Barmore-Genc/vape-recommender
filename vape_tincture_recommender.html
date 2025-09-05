@@ -68,7 +68,7 @@
       min-width: 90px;
     }
     .theme-dark .table, .theme-dark .table th, .theme-dark .table td {
-      background: #333;
+      background: transparent;
       color: #eee;
       border-color: #444;
     }
@@ -77,6 +77,12 @@
   .type-sativa { background: red; color: white; }
   .type-cbd { background: #FF7518; color: white; }
   .type-unknown { background: #888; color: white; }
+  /* Ensure product type backgrounds retain color in dark mode */
+  .theme-dark .type-hybrid { background: purple !important; color: white !important; }
+  .theme-dark .type-indica { background: blue !important; color: white !important; }
+  .theme-dark .type-sativa { background: red !important; color: white !important; }
+  .theme-dark .type-cbd { background: #FF7518 !important; color: white !important; }
+  .theme-dark .type-unknown { background: #888 !important; color: white !important; }
   .hyperlink { color: white; text-decoration: underline; cursor: pointer; background: inherit; }
   .theme-light .hyperlink { color: white; }
   .theme-dark .hyperlink { color: #eee; }
